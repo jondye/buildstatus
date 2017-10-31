@@ -34,26 +34,31 @@ def main():
                 if color == job_color[i]:
                     continue
 
-                if color.startswith('blue'):
-                    lights.red.off()
-                    if color.endswith('_anime'):
-                        lights.green.pulse()
-                    else:
-                        lights.green.on()
-                elif color.startswith('red'):
-                    lights.green.off()
-                    if color.endswith('_anime'):
-                        lights.red.pulse()
-                    else:
-                        lights.red.on()
-                else:
-                    lights.on()
+                set_status(color, lights)
+
                 job_color = color
 
         except ConnectionError:
             print("Unable to connect")
 
         time.sleep(delay)
+
+
+def set_status(color, lights):
+    if color.startswith('blue'):
+        lights.red.off()
+        if color.endswith('_anime'):
+            lights.green.pulse()
+        else:
+            lights.green.on()
+    elif color.startswith('red'):
+        lights.green.off()
+        if color.endswith('_anime'):
+            lights.red.pulse()
+        else:
+            lights.red.on()
+    else:
+        lights.on()
 
 
 if __name__ == '__main__':
