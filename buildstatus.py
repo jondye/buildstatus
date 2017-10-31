@@ -38,10 +38,12 @@ def main():
 
                 job_color = color
 
-        except ConnectionError:
-            print("Unable to connect")
+            time.sleep(delay)
 
-        time.sleep(delay)
+        except ConnectionError:
+
+            print("Unable to connect")
+            display_warning(delay, status)
 
 
 def set_status(color, lights):
@@ -59,6 +61,15 @@ def set_status(color, lights):
             lights.red.on()
     else:
         lights.on()
+
+
+def display_warning(delay, status):
+    start = time.time()
+    while time.time() - start >= delay:
+        for s in status:
+            status.off()
+            s.lights.red.on()
+            time.sleep(1)
 
 
 if __name__ == '__main__':
