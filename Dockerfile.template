@@ -2,7 +2,7 @@ FROM resin/%%RESIN_MACHINE_NAME%%-python:3
 
 WORKDIR /usr/src/app
 
-RUN pip3 install --no-cache-dir gpiozero rpi.gpio
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY buildstatus.py ./
 
