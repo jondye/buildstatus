@@ -1,0 +1,11 @@
+FROM resin/%%RESIN_MACHINE_NAME%%-python:3
+
+WORKDIR /usr/src/app
+
+RUN pip3 install --no-cache-dir gpiozero rpi.gpio
+
+COPY buildstatus.py ./
+
+ENV INITSYSTEM on
+
+CMD ["python3", "buildstatus.py"]
