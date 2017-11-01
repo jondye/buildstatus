@@ -26,10 +26,6 @@ def main():
                     continue
 
                 job = j.job(name)
-                if not job.enabled:
-                    lights.off()
-                    continue
-
                 color = job.info['color']
                 if color == job_color[i]:
                     continue
