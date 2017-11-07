@@ -32,7 +32,7 @@ def main():
 
                 set_status(color, lights)
 
-                job_color = color
+                job_color[i] = color
 
             time.sleep(delay)
 
