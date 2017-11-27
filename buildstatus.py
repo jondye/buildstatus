@@ -61,7 +61,7 @@ def set_status(color, lights):
 
 def display_warning(delay, status):
     start = time.time()
-    while time.time() - start >= delay:
+    while time.time() - start <= delay:
         for s in status:
             status.off()
             s.lights.red.on()
