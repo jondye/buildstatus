@@ -25,13 +25,11 @@ def main():
                     lights.off()
                     continue
 
-                job = j.job(name)
-                color = job.info['color']
+                color = get_job_color(j, name)
                 if color == job_color[i]:
                     continue
 
                 set_status(color, lights)
-
                 job_color[i] = color
 
             time.sleep(delay)
@@ -42,8 +40,19 @@ def main():
             display_warning(delay, status)
 
 
+def get_job_color(j, name):
+    try:
+        job = j.job(name)
+        return job.info['color']
+    except ConnectionError:
+        print("Can't retrieve info on job " + name)
+        return None
+
+
 def set_status(color, lights):
-    if color.startswith('blue'):
+    if not color:
+        lights.off()
+    elif color.startswith('blue'):
         lights.red.off()
         if color.endswith('_anime'):
             lights.green.pulse()
