@@ -18,6 +18,7 @@ def main():
     while True:
         try:
 
+            print("Polling " + server)
             j = Jenkins(server)
             for i, name in enumerate(job_names):
                 lights = status[i].lights
@@ -34,9 +35,8 @@ def main():
 
             time.sleep(delay)
 
-        except ConnectionError:
-
-            print("Unable to connect")
+        except ConnectionError as e:
+            print("Unable to connect:\n{}".format(e))
             display_warning(delay, status)
 
 
@@ -44,8 +44,8 @@ def get_job_color(j, name):
     try:
         job = j.job(name)
         return job.info['color']
-    except ConnectionError:
-        print("Can't retrieve info on job " + name)
+    except ConnectionError as e:
+        print("Can't retrieve info on job {}:\n{}".format(name, e))
         return None
 
 
