@@ -1,5 +1,6 @@
 #!python3
 
+import logging
 import os
 import time
 
@@ -9,6 +10,8 @@ from gpiozero import StatusBoard
 
 
 def main():
+    debug = os.environ.get('DEBUG')
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     delay = os.environ.get('POLL_PERIOD', 60)
     server = os.environ['JENKINS_URI']
     status = StatusBoard(pwm=True)
@@ -18,7 +21,7 @@ def main():
     while True:
         try:
 
-            print("Polling " + server)
+            logging.info("Polling %s", server)
             j = Jenkins(server)
             for i, name in enumerate(job_names):
                 lights = status[i].lights
@@ -35,17 +38,19 @@ def main():
 
             time.sleep(delay)
 
-        except ConnectionError as e:
-            print("Unable to connect:\n{}".format(e))
+        except ConnectionError:
+            logging.exception("Unable to connect")
             display_warning(delay, status)
 
 
 def get_job_color(j, name):
     try:
         job = j.job(name)
-        return job.info['color']
-    except ConnectionError as e:
-        print("Can't retrieve info on job {}:\n{}".format(name, e))
+        color = job.info['color']
+        logging.debug("Job %s is %s", name, color)
+        return color
+    except ConnectionError:
+        logging.error("Can\'t retrieve info on job %s", name)
         return None
 
 
