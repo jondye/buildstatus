@@ -41,6 +41,7 @@ def main():
         except ConnectionError:
             logging.exception("Unable to connect")
             display_warning(delay, status)
+            job_color = [None for _ in job_names]
 
 
 def get_job_color(j, name):
