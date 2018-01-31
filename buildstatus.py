@@ -30,6 +30,9 @@ def main():
                     continue
 
                 color = get_job_color(j, name)
+                logging.debug(
+                    "Job %s was %s and is now %s",
+                    name, job_color[i], color)
                 if color == job_color[i]:
                     continue
 
