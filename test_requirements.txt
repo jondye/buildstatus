@@ -1,0 +1,2 @@
+jenkins-webapi
+pytest

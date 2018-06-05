@@ -13,17 +13,21 @@ def main():
     debug = os.environ.get('DEBUG')
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     delay = os.environ.get('POLL_PERIOD', 60)
-    server = os.environ['JENKINS_URI']
+    default_server = os.environ['JENKINS_URI']
     status = StatusBoard(pwm=True)
     job_names = [os.environ.get('JENKINS_JOB_%d' % (i+1)) for i in range(5)]
+    jobs = [
+        (default_server, j) for j in job_names
+    ]
+
     job_color = [None for _ in job_names]
 
     while True:
-        try:
+        for i, (server, name) in enumerate(jobs):
+            try:
+                logging.info("Polling %s", server)
+                j = Jenkins(server)
 
-            logging.info("Polling %s", server)
-            j = Jenkins(server)
-            for i, name in enumerate(job_names):
                 lights = status[i].lights
                 if not name:
                     lights.off()
@@ -39,12 +43,15 @@ def main():
                 set_status(color, lights)
                 job_color[i] = color
 
-            time.sleep(delay)
+            except ConnectionError:
+                logging.exception("Unable to connect to %s", server)
+                job_color[i] = None
 
-        except ConnectionError:
-            logging.exception("Unable to connect")
+        if any(job_color):
+            time.sleep(delay)
+        else:  # all failed
             display_warning(delay, status)
-            job_color = [None for _ in job_names]
+
 
 
 def get_job_color(j, name):
