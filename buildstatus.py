@@ -5,8 +5,8 @@ import os
 import time
 
 from requests.exceptions import ConnectionError
-from jenkins import Jenkins
-from gpiozero import StatusBoard
+import jenkins
+import gpiozero
 
 
 def main():
@@ -14,17 +14,27 @@ def main():
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     delay = os.environ.get('POLL_PERIOD', 60)
     server = os.environ['JENKINS_URI']
-    status = StatusBoard(pwm=True)
     job_names = [os.environ.get('JENKINS_JOB_%d' % (i+1)) for i in range(5)]
-    job_color = [None for _ in job_names]
 
+    board = StatusBoard(server, job_names)
     while True:
-        try:
+        board.update()
+        time.sleep(delay)
 
-            logging.info("Polling %s", server)
-            j = Jenkins(server)
-            for i, name in enumerate(job_names):
-                lights = status[i].lights
+
+class StatusBoard(object):
+    def __init__(self, server, job_names):
+        self.server = server
+        self.job_names = job_names
+        self.status = gpiozero.StatusBoard(pwm=True)
+        self.job_color = [None for _ in job_names]
+
+    def update(self):
+        try:
+            logging.info("Polling %s", self.server)
+            j = jenkins.Jenkins(self.server)
+            for i, name in enumerate(self.job_names):
+                lights = self.status[i].lights
                 if not name:
                     lights.off()
                     continue
@@ -32,19 +42,25 @@ def main():
                 color = get_job_color(j, name)
                 logging.debug(
                     "Job %s was %s and is now %s",
-                    name, job_color[i], color)
-                if color == job_color[i]:
+                    name, self.job_color[i], color)
+                if color == self.job_color[i]:
                     continue
 
                 set_status(color, lights)
-                job_color[i] = color
-
-            time.sleep(delay)
+                self.job_color[i] = color
 
         except ConnectionError:
             logging.exception("Unable to connect")
-            display_warning(delay, status)
-            job_color = [None for _ in job_names]
+            self.display_warning()
+            self.job_color = [None for _ in self.job_names]
+
+    def display_warning(self):
+        start = time.time()
+        while time.time() - start <= 10:
+            for s in self.status:
+                self.status.off()
+                s.lights.red.on()
+                time.sleep(1)
 
 
 def get_job_color(j, name):
@@ -76,14 +92,6 @@ def set_status(color, lights):
     else:
         lights.on()
 
-
-def display_warning(delay, status):
-    start = time.time()
-    while time.time() - start <= delay:
-        for s in status:
-            status.off()
-            s.lights.red.on()
-            time.sleep(1)
 
 
 if __name__ == '__main__':
