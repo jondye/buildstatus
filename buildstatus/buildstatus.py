@@ -9,6 +9,38 @@ from jenkins import Jenkins
 from gpiozero import StatusBoard
 
 
+class JenkinsJobStatus(object):
+    def __init__(self, server_uri, job_name):
+        self.server_uri = server_uri
+        self.job_name = job_name
+        self.color = None
+
+    def update(self):
+        logging.info("Polling %s", self.server_uri)
+        try:
+            color = get_job_color(
+                Jenkins(self.server_uri),
+                self.job_name)
+            logging.debug(
+                "JenkinsJob %s was %s and is now %s",
+                self.job_name, self.color, color)
+            self.color = color
+        except ConnectionError:
+            logging.exception("Unable to connect")
+            self.color = None
+
+    def set_light(self, light):
+        set_status(self.color, light)
+
+
+class BlankStatus(object):
+    def update(self):
+        pass
+
+    def set_light(self, light):
+        light.off()
+
+
 def main():
     debug = os.environ.get('DEBUG')
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
@@ -16,35 +48,15 @@ def main():
     server = os.environ['JENKINS_URI']
     status = StatusBoard(pwm=True)
     job_names = [os.environ.get('JENKINS_JOB_%d' % (i+1)) for i in range(5)]
-    job_color = [None for _ in job_names]
+    pollers = [
+            JenkinsJob(server, job_name) if name else BlankStatus()
+            for name in job_names]
 
     while True:
-        try:
-
-            logging.info("Polling %s", server)
-            j = Jenkins(server)
-            for i, name in enumerate(job_names):
-                lights = status[i].lights
-                if not name:
-                    lights.off()
-                    continue
-
-                color = get_job_color(j, name)
-                logging.debug(
-                    "Job %s was %s and is now %s",
-                    name, job_color[i], color)
-                if color == job_color[i]:
-                    continue
-
-                set_status(color, lights)
-                job_color[i] = color
-
-            time.sleep(delay)
-
-        except ConnectionError:
-            logging.exception("Unable to connect")
-            display_warning(delay, status)
-            job_color = [None for _ in job_names]
+        for i, poller in enumerate(pollers):
+            poller.update()
+            poller.set_light(status[i].lights)
+        time.sleep(delay)
 
 
 def get_job_color(j, name):
@@ -75,15 +87,6 @@ def set_status(color, lights):
             lights.red.on()
     else:
         lights.on()
-
-
-def display_warning(delay, status):
-    start = time.time()
-    while time.time() - start <= delay:
-        for s in status:
-            status.off()
-            s.lights.red.on()
-            time.sleep(1)
 
 
 if __name__ == '__main__':
