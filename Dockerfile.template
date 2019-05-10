@@ -2,12 +2,10 @@ FROM resin/%%RESIN_MACHINE_NAME%%-python:3
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt ./
+COPY buildstatus ./buildstatus
 
-RUN pip3 install --no-cache-dir -r requirements.txt
-
-COPY buildstatus.py ./
+RUN pip3 install --no-cache-dir ./buildstatus
 
 ENV INITSYSTEM on
 
-CMD ["python3", "buildstatus.py"]
+CMD ["buildstatus.py"]
