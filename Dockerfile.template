@@ -4,6 +4,8 @@ WORKDIR /usr/src/app
 
 COPY buildstatus ./buildstatus
 
+RUN pip3 install --no-cache-dir -r buildstatus/requirements.txt
+
 RUN pip3 install --no-cache-dir ./buildstatus
 
 ENV INITSYSTEM on
