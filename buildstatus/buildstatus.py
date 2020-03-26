@@ -12,7 +12,7 @@ from gpiozero import StatusBoard
 def main():
     debug = os.environ.get('DEBUG')
     logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
-    delay = os.environ.get('POLL_PERIOD', 60)
+    delay = int(os.environ.get('POLL_PERIOD', '60'))
     server = os.environ['JENKINS_URI']
     status = StatusBoard(pwm=True)
     job_names = [os.environ.get('JENKINS_JOB_%d' % (i+1)) for i in range(5)]
