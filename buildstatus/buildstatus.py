@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 from requests.exceptions import ConnectionError
 from jenkins import Jenkins
 from gpiozero import StatusBoard
-import sshtunnel
 
 
 def main():
@@ -19,29 +18,15 @@ def main():
     status = StatusBoard(pwm=True)
     job_names = [os.environ.get('JENKINS_JOB_%d' % (i+1)) for i in range(5)]
     job_color = [None for _ in job_names]
-    ssh_relay = os.environ.get('SSH_RELAY')
-    ssh_user = os.environ.get('SSH_USER')
-    ssh_key = os.environ.get('SSH_KEY')
 
     while True:
         try:
-            logging.info("Setting up ssh tunnel via %s@%s", ssh_user, ssh_relay)
-            url = urlparse(server)
-            host = url.netloc.split(':')[0]
-            port = url.port if url.port else 80
-            with sshtunnel.open_tunnel(
-                    ssh_relay,
-                    ssh_username=ssh_user,
-                    ssh_pkey=ssh_key,
-                    remote_bind_address=(host, port),
-                    local_bind_address=('localhost', 12345)):
-
-                poll_server(
-                        url._replace(netloc='localhost:12345').geturl(),
-                        status,
-                        job_names,
-                        job_color)
-                time.sleep(delay)
+            poll_server(
+                    server,
+                    status,
+                    job_names,
+                    job_color)
+            time.sleep(delay)
 
         except ConnectionError:
             logging.exception("Unable to connect")
