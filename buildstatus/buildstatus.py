@@ -18,11 +18,13 @@ def main():
     status = StatusBoard(pwm=True)
     job_names = [os.environ.get('JENKINS_JOB_%d' % (i+1)) for i in range(5)]
     job_color = [None for _ in job_names]
+    username = os.environ.get('JENKINS_USERNAME', None)
+    password = os.environ.get('JENKINS_PASSWORD', None)
 
     while True:
         try:
             poll_server(
-                    server,
+                    Jenkins(server, username=username, password=password),
                     status,
                     job_names,
                     job_color)
@@ -34,8 +36,7 @@ def main():
             job_color = [None for _ in job_names]
 
 
-def poll_server(server, status, job_names, job_color):
-    j = Jenkins(server)
+def poll_server(j, status, job_names, job_color):
     for i, name in enumerate(job_names):
         lights = status[i].lights
         if not name:
