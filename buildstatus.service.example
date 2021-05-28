@@ -1,0 +1,22 @@
+[Unit]
+Description=buildstatus
+After=multi-user.target
+# This waits for an active network
+#Requires=network-online.target
+# This waits for active openvpn connection (assumes /etc/openvpn/my-vpn-config.conf)
+#Requires=openvpn@my-vpn-config.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/buildstatus
+Environment=JENKINS_URI=https://jenkins.example.com/
+Environment=JENKINS_USERNAME=team-awesome
+Environment=JENKINS_PASSWORD="correct horse battery staple"
+Environment=JENKINS_JOB_1="awesome_product_1"
+Environment=JENKINS_JOB_2="awesome_product_2"
+Environment=JENKINS_JOB_3="team-awesome/job/awesome_product_3"
+Environment=JENKINS_JOB_4="team-awesome/job/awesome_product_4"
+Environment=JENKINS_JOB_5="team-awesome/job/awesome_product_5"
+
+[Install]
+WantedBy=multi-user.target
